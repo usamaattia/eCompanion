@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Calendar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css" />
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./static/chat.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
+  <script>
+    if ( window.history.replaceState ) {
+        window.history.replaceState( null, null, window.location.href );
+    }
+</script>
+  <script>
+  $(document).ready(function() {
+   var calendar = $('#calendar').fullCalendar({
+    editable:true,
+    header:{
+     left:'prev,next today',
+     center:'title',
+     right:'month,agendaWeek,agendaDay'
+    },
+    events: [{% for row in calendar %}{ id : '{{row.id}}', title : '{{row.title}}', start : '{{row.start_event}}', end : '{{row.end_event}}', }, {% endfor %}],
+    selectable:true,
+    selectHelper:true,
+    select: function(start, end, allDay)
+    {
+     var title = prompt("Enter Event Title");
+     if(title)
+     {
+      var start = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss");
+      var end = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss");
+      $.ajax({
+       url:"/insert",
+       type:"POST",
+       data:{title:title, start:start, end:end},
+       success:function(data)
+       {
+         //alert(data)
+        alert("Added Successfully");
+        window.location.replace("/calendar");
+       }
+      })
+     }
+    },
+    editable:true,
+    eventResize:function(event)
+    {
+     var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+     var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
+     var title = event.title;
+     var id = event.id;
+     $.ajax({
+      url:"/update",
+      type:"POST",
+      data:{title:title, start:start, end:end, id:id},
+      success:function(){
+       calendar.fullCalendar('refetchEvents');
+       alert('Event Update');
+      }
+     })
+    },
+      
+    eventDrop:function(event)
+    {
+     var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+     var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
+     var title = event.title;
+     var id = event.id;
+     $.ajax({
+      url:"/update",
+      type:"POST",
+      data:{title:title, start:start, end:end, id:id},
+      success:function()
+      {
+       calendar.fullCalendar('refetchEvents');
+       alert("Event Updated");
+      }
+     });
+    },
+  
+    eventClick:function(event)
+    {
+     if(confirm("Are you sure you want to remove it?"))
+     {
+      var id = event.id;
+      $.ajax({
+       url:"/ajax_delete",
+       type:"POST",
+       data:{id:id},
+       success:function()
+       {
+        calendar.fullCalendar('refetchEvents');
+        alert("Event Removed");
+        window.location.replace("/calendar");
+       }
+      })
+     }
+    },
+  
+   });
+  });
+     
+  </script>
+ </head>
+ <body onload="form1.reset();">
+   
+  <br />
+  <div class="container">
+    <div id="calendar"></div>
+   </div>
+  <br>
+  <br />
+  <form align="center" action="/calendar" method="POST" id="form1" onSubmit="window.location.reload()">
+    <label for="lname">input your plan:</label>
+    <br><br>
+    <input type="text" id="plan" name="plan" onSubmit="window.location.reload()">
+    <button type="submit" value="Submit">Add</button>
+  </form>
+  <h2 align="center"></h2>
+  
+  <h3 align="center">
+    <div class="bubbleWrapper">
+      <div class="inlineContainer own">
+        <img class="inlineIcon" src="https://www.pinclipart.com/picdir/middle/205-2059398_blinkk-en-mac-app-store-ninja-icon-transparent.png">
+        <div class="ownBubble own">
+          {{out_put}}<br>
+        </div>
+      </div><span class="own"><script> document.write(new Date().toLocaleDateString()); </script></span>
+    </div> 
+    </h3>
+ 
+  <h3 align="center"></div> 
+    <div class="bubbleWrapper">
+      <div class="inlineContainer">
+        <img class="inlineIcon" src="https://cdn1.iconfinder.com/data/icons/ninja-things-1/1772/ninja-simple-512.png">
+        <div class="otherBubble other">
+          {{my_input}}
+        </div>
+      </div><span class="other"><script> document.write(new Date().toLocaleDateString()); </script></span>
+      
+    </div> 
+  </h3>
+
+  
+    <h3 align="center">
+    
+      {% for row in conv %} 
+      
+      <div class="bubbleWrapper">
+        <div class="inlineContainer own">
+          <img class="inlineIcon" src="https://www.pinclipart.com/picdir/middle/205-2059398_blinkk-en-mac-app-store-ninja-icon-transparent.png">
+          <div class="ownBubble own">
+            {{row.output_}}<br>
+          </div>
+        </div><span class="own">{{row.created_at.strftime('%H:%M')}}</span>
+      </div> 
+      <div class="bubbleWrapper">
+        <div class="inlineContainer">
+          <img class="inlineIcon" src="https://cdn1.iconfinder.com/data/icons/ninja-things-1/1772/ninja-simple-512.png">
+          <div class="otherBubble other">
+            {{row.input_}}<br>
+          </div>
+        </div><span class="other">{{row.created_at.strftime('%H:%M')}}</span>
+      </div> 
+      {%endfor%}
+    </h3>
+  
+ </body>
+</html>

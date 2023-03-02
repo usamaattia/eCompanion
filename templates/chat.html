@@ -1,0 +1,22 @@
+{% extends 'index.html' %}
+
+{% block head %} 
+<title>chat</title>
+{% endblock%}
+
+{% block body %} 
+
+<h1>chat</h1>
+<form action="/chat" method="POST">
+    <label for="lname">input your plan:</label>
+    <br><br>
+    <input type="text" id="plan" name="plan">
+    <input type="submit" value="Submit">
+  </form>
+
+
+<h3>{{my_input}}</h3>
+<h3>{{out_put}}</h3>
+<br> 
+<a href="/calendar">calendar</a>
+{% endblock%}
